@@ -42,12 +42,7 @@ class Database:
 
         self.conn.commit()
 
-    def add_task(
-        self,
-        title,
-        description="",
-        priority="Medium"
-    ):
+    def add_task(self, title, description="", priority="Medium"):
         self.cursor.execute(
             """
             INSERT INTO tasks(
@@ -63,21 +58,47 @@ class Database:
                 priority
             )
         )
+
         self.conn.commit()
 
-    def get_tasks(self):
-        self.cursor.execute(
+    def get_tasks(
+        self,
+        search_text="",
+        priority_filter="All"
+    ):
+        query = """
+        SELECT
+            id,
+            title,
+            description,
+            priority,
+            completed
+        FROM tasks
+        WHERE 1=1
+        """
+
+        params = []
+
+        if search_text:
+            query += """
+            AND (
+                title LIKE ?
+                OR description LIKE ?
+            )
             """
-            SELECT
-                id,
-                title,
-                description,
-                priority,
-                completed
-            FROM tasks
-            ORDER BY id DESC
-            """
-        )
+
+            params.extend([
+                f"%{search_text}%",
+                f"%{search_text}%"
+            ])
+
+        if priority_filter != "All":
+            query += " AND priority = ? "
+            params.append(priority_filter)
+
+        query += " ORDER BY id DESC "
+
+        self.cursor.execute(query, params)
 
         return self.cursor.fetchall()
 
