@@ -3,25 +3,69 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QLabel,
     QLineEdit,
+    QTextEdit,
     QPushButton,
-    QHBoxLayout
+    QHBoxLayout,
+    QComboBox
 )
 
 
 class AddTaskDialog(QDialog):
-    def __init__(self):
+    def __init__(
+        self,
+        title="",
+        description="",
+        priority="Medium"
+    ):
         super().__init__()
 
-        self.setWindowTitle("Add Task")
-        self.resize(400, 150)
+        self.setWindowTitle("Task")
+        self.resize(450, 300)
 
         layout = QVBoxLayout(self)
 
-        layout.addWidget(QLabel("Task Title"))
+        # Title
+
+        layout.addWidget(QLabel("Title"))
 
         self.title_input = QLineEdit()
-        self.title_input.setPlaceholderText("Enter your task...")
+        self.title_input.setText(title)
+        self.title_input.setPlaceholderText(
+            "Enter task title..."
+        )
+
         layout.addWidget(self.title_input)
+
+        # Description
+
+        layout.addWidget(QLabel("Description"))
+
+        self.description_input = QTextEdit()
+        self.description_input.setPlainText(description)
+
+        layout.addWidget(self.description_input)
+
+        # Priority
+
+        layout.addWidget(QLabel("Priority"))
+
+        self.priority_input = QComboBox()
+        self.priority_input.addItems(
+            [
+                "High",
+                "Medium",
+                "Low"
+            ]
+        )
+
+        index = self.priority_input.findText(priority)
+
+        if index >= 0:
+            self.priority_input.setCurrentIndex(index)
+
+        layout.addWidget(self.priority_input)
+
+        # Buttons
 
         buttons = QHBoxLayout()
 
