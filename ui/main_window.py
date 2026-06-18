@@ -1,3 +1,4 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -7,7 +8,9 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QLabel,
-    QMessageBox
+    QMessageBox,
+    QLineEdit,
+    QComboBox
 )
 
 from ui.add_task_dialog import AddTaskDialog
@@ -21,7 +24,7 @@ class MainWindow(QMainWindow):
         self.db = Database()
 
         self.setWindowTitle("My Reminder")
-        self.resize(900, 650)
+        self.resize(1000, 700)
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -34,12 +37,52 @@ class MainWindow(QMainWindow):
             font-weight: bold;
             padding: 10px;
         """)
+
         layout.addWidget(title)
 
+        # Search + Filter
+
+        top_bar = QHBoxLayout()
+
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText(
+            "Search tasks..."
+        )
+
+        self.search_input.textChanged.connect(
+            self.load_tasks
+        )
+
+        self.priority_filter = QComboBox()
+        self.priority_filter.addItems(
+            [
+                "All",
+                "High",
+                "Medium",
+                "Low"
+            ]
+        )
+
+        self.priority_filter.currentTextChanged.connect(
+            self.load_tasks
+        )
+
+        top_bar.addWidget(self.search_input)
+        top_bar.addWidget(self.priority_filter)
+
+        layout.addLayout(top_bar)
+
+        # Task List
+
         self.task_list = QListWidget()
-        self.task_list.itemDoubleClicked.connect(self.edit_task)
+
+        self.task_list.itemDoubleClicked.connect(
+            self.edit_task
+        )
 
         layout.addWidget(self.task_list)
+
+        # Buttons
 
         buttons = QHBoxLayout()
 
@@ -48,10 +91,21 @@ class MainWindow(QMainWindow):
         self.complete_button = QPushButton("✔ Complete")
         self.delete_button = QPushButton("🗑 Delete")
 
-        self.add_button.clicked.connect(self.open_add_task)
-        self.edit_button.clicked.connect(self.edit_task)
-        self.complete_button.clicked.connect(self.complete_task)
-        self.delete_button.clicked.connect(self.delete_task)
+        self.add_button.clicked.connect(
+            self.open_add_task
+        )
+
+        self.edit_button.clicked.connect(
+            self.edit_task
+        )
+
+        self.complete_button.clicked.connect(
+            self.complete_task
+        )
+
+        self.delete_button.clicked.connect(
+            self.delete_task
+        )
 
         buttons.addWidget(self.add_button)
         buttons.addWidget(self.edit_button)
@@ -65,15 +119,51 @@ class MainWindow(QMainWindow):
     def load_tasks(self):
         self.task_list.clear()
 
-        tasks = self.db.get_tasks()
+        search_text = (
+            self.search_input.text().strip()
+        )
 
-        for task_id, title, description, priority, completed in tasks:
+        priority_filter = (
+            self.priority_filter.currentText()
+        )
+
+        tasks = self.db.get_tasks(
+            search_text,
+            priority_filter
+        )
+
+        for (
+            task_id,
+            title,
+            description,
+            priority,
+            completed
+        ) in tasks:
 
             status = "✔" if completed else "○"
 
-            text = f"{status} [{priority}] {title}"
+            text = (
+                f"{status} "
+                f"[{priority}] "
+                f"{title}"
+            )
 
             item = QListWidgetItem(text)
+
+            item.setToolTip(
+                description
+                if description
+                else "No description"
+            )
+
+            if priority == "High":
+                item.setForeground(Qt.red)
+
+            elif priority == "Medium":
+                item.setForeground(Qt.darkYellow)
+
+            elif priority == "Low":
+                item.setForeground(Qt.darkGreen)
 
             item.setData(
                 1,
@@ -93,7 +183,9 @@ class MainWindow(QMainWindow):
 
         if dialog.exec():
 
-            title = dialog.title_input.text().strip()
+            title = (
+                dialog.title_input.text().strip()
+            )
 
             description = (
                 dialog.description_input
@@ -147,7 +239,9 @@ class MainWindow(QMainWindow):
 
         if dialog.exec():
 
-            title = dialog.title_input.text().strip()
+            title = (
+                dialog.title_input.text().strip()
+            )
 
             description = (
                 dialog.description_input
@@ -184,7 +278,10 @@ class MainWindow(QMainWindow):
 
         data = item.data(1)
 
-        new_state = 0 if data["completed"] else 1
+        new_state = (
+            0 if data["completed"]
+            else 1
+        )
 
         self.db.complete_task(
             data["id"],
@@ -210,7 +307,8 @@ class MainWindow(QMainWindow):
             self,
             "Delete Task",
             "Are you sure you want to delete this task?",
-            QMessageBox.Yes | QMessageBox.No
+            QMessageBox.Yes |
+            QMessageBox.No
         )
 
         if reply == QMessageBox.No:
