@@ -37,9 +37,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(title)
 
         self.task_list = QListWidget()
-        self.task_list.itemDoubleClicked.connect(
-            self.edit_task
-        )
+        self.task_list.itemDoubleClicked.connect(self.edit_task)
 
         layout.addWidget(self.task_list)
 
@@ -50,21 +48,10 @@ class MainWindow(QMainWindow):
         self.complete_button = QPushButton("✔ Complete")
         self.delete_button = QPushButton("🗑 Delete")
 
-        self.add_button.clicked.connect(
-            self.open_add_task
-        )
-
-        self.edit_button.clicked.connect(
-            self.edit_task
-        )
-
-        self.complete_button.clicked.connect(
-            self.complete_task
-        )
-
-        self.delete_button.clicked.connect(
-            self.delete_task
-        )
+        self.add_button.clicked.connect(self.open_add_task)
+        self.edit_button.clicked.connect(self.edit_task)
+        self.complete_button.clicked.connect(self.complete_task)
+        self.delete_button.clicked.connect(self.delete_task)
 
         buttons.addWidget(self.add_button)
         buttons.addWidget(self.edit_button)
@@ -80,21 +67,11 @@ class MainWindow(QMainWindow):
 
         tasks = self.db.get_tasks()
 
-        for (
-            task_id,
-            title,
-            description,
-            priority,
-            completed
-        ) in tasks:
+        for task_id, title, description, priority, completed in tasks:
 
             status = "✔" if completed else "○"
 
-            text = (
-                f"{status} "
-                f"[{priority}] "
-                f"{title}"
-            )
+            text = f"{status} [{priority}] {title}"
 
             item = QListWidgetItem(text)
 
@@ -116,9 +93,7 @@ class MainWindow(QMainWindow):
 
         if dialog.exec():
 
-            title = (
-                dialog.title_input.text().strip()
-            )
+            title = dialog.title_input.text().strip()
 
             description = (
                 dialog.description_input
@@ -172,9 +147,7 @@ class MainWindow(QMainWindow):
 
         if dialog.exec():
 
-            title = (
-                dialog.title_input.text().strip()
-            )
+            title = dialog.title_input.text().strip()
 
             description = (
                 dialog.description_input
@@ -186,9 +159,6 @@ class MainWindow(QMainWindow):
                 dialog.priority_input
                 .currentText()
             )
-
-            if not title:
-                return
 
             self.db.update_task(
                 data["id"],
@@ -214,9 +184,7 @@ class MainWindow(QMainWindow):
 
         data = item.data(1)
 
-        new_state = (
-            0 if data["completed"] else 1
-        )
+        new_state = 0 if data["completed"] else 1
 
         self.db.complete_task(
             data["id"],
@@ -242,8 +210,7 @@ class MainWindow(QMainWindow):
             self,
             "Delete Task",
             "Are you sure you want to delete this task?",
-            QMessageBox.Yes |
-            QMessageBox.No
+            QMessageBox.Yes | QMessageBox.No
         )
 
         if reply == QMessageBox.No:
